@@ -3,16 +3,129 @@
 Changelog
 ---------
 
-3.0.1
+6.0.1-dev
+~~~~~~~~~
+
+202x-xx-xx • `full history <https://github.com/gorakhargosh/watchdog/compare/v6.0.0...HEAD>`__
+
+- 
+- Thanks to our beloved contributors: @BoboTiG, @
+
+6.0.0
 ~~~~~
 
-2023-xx-xx • `full history <https://github.com/gorakhargosh/watchdog/compare/v3.0.0...HEAD>`__
+2024-11-01 • `full history <https://github.com/gorakhargosh/watchdog/compare/v5.0.3...v6.0.0>`__
 
+- Pin test dependecies.
+- [docs] Add typing info to quick start. (`#1082 <https://github.com/gorakhargosh/watchdog/pull/1082>`__)
+- [inotify] Use of ``select.poll()`` instead of deprecated ``select.select()``, if available. (`#1078 <https://github.com/gorakhargosh/watchdog/pull/1078>`__)
+- [inotify] Fix reading inotify file descriptor after closing it. (`#1081 <https://github.com/gorakhargosh/watchdog/pull/1081>`__)
+- [utils] The ``stop_signal`` keyword-argument type of the ``AutoRestartTrick`` class can now be either a ``signal.Signals`` or an ``int``.
+- [utils] Added the ``__repr__()`` method to the ``Trick`` class.
+- [utils] Removed the unused ``echo_class()`` function from the ``echo`` module.
+- [utils] Removed the unused ``echo_instancemethod()`` function from the ``echo`` module.
+- [utils] Removed the unused ``echo_module()`` function from the ``echo`` module.
+- [utils] Removed the unused ``is_class_private_name()`` function from the ``echo`` module.
+- [utils] Removed the unused ``is_classmethod()`` function from the ``echo`` module.
+- [utils] Removed the unused ``ic_method(met()`` function from the ``echo`` module.
+- [utils] Removed the unused ``method_name()`` function from the ``echo`` module.
+- [utils] Removed the unused ``name()`` function from the ``echo`` module.
+- [watchmedo] Fixed Mypy issues.
+- [watchmedo] Added the ``__repr__()`` method to the ``HelpFormatter`` class.
+- [watchmedo] Removed the ``--trace`` CLI argument from the ``watchmedo log`` command, useless since events are logged by default at the ``LoggerTrick`` class level.
+- [windows] Fixed Mypy issues.
+- Thanks to our beloved contributors: @BoboTiG, @g-pichler, @ethan-vanderheijden, @nhairs
+
+5.0.3
+~~~~~
+
+2024-09-27 • `full history <https://github.com/gorakhargosh/watchdog/compare/v5.0.2...v5.0.3>`__
+
+- [inotify] Improve cleaning up ``Inotify`` threads, and add ``eventlet`` test cases (`#1070 <https://github.com/gorakhargosh/watchdog/pull/1070>`__)
+- Thanks to our beloved contributors: @BoboTiG, @ethan-vanderheijden
+
+5.0.2
+~~~~~
+
+2024-09-03 • `full history <https://github.com/gorakhargosh/watchdog/compare/v5.0.1...v5.0.2>`__
+
+- Enable OS specific Mypy checks (`#1064 <https://github.com/gorakhargosh/watchdog/pull/1064>`__)
+- [watchmedo] Fix ``tricks`` argument type of ``schedule_tricks()`` (`#1063 <https://github.com/gorakhargosh/watchdog/pull/1063>`__)
+- Thanks to our beloved contributors: @gnought, @BoboTiG
+
+5.0.1
+~~~~~
+
+2024-09-02 • `full history <https://github.com/gorakhargosh/watchdog/compare/v5.0.0...v5.0.1>`__
+
+- [kqueue] Fix ``TypeError: kqueue.control() only accepts positional parameters``  (`#1062 <https://github.com/gorakhargosh/watchdog/pull/1062>`__)
+- Thanks to our beloved contributors: @apoirier, @BoboTiG
+
+5.0.0
+~~~~~
+
+2024-08-26 • `full history <https://github.com/gorakhargosh/watchdog/compare/v4.0.2...v5.0.0>`__
+
+**Breaking Changes**
+
+- Drop support for Python 3.8 (`#1055 <https://github.com/gorakhargosh/watchdog/pull/1055>`__)
+- [core] Enforced usage of proper keyword-arguments (`#1057 <https://github.com/gorakhargosh/watchdog/pull/1057>`__)
+- [core] Renamed the ``BaseObserverSubclassCallable`` class to ``ObserverType`` (`#1055 <https://github.com/gorakhargosh/watchdog/pull/1055>`__)
+- [inotify] Renamed the ``inotify_event_struct`` class to ``InotifyEventStruct`` (`#1055 <https://github.com/gorakhargosh/watchdog/pull/1055>`__)
+- [inotify] Renamed the ``UnsupportedLibc`` exception to ``UnsupportedLibcError`` (`#1057 <https://github.com/gorakhargosh/watchdog/pull/1057>`__)
+- [inotify] Removed the ``InotifyConstants.IN_CLOSE`` constant (`#1046 <https://github.com/gorakhargosh/watchdog/pull/1046>`__)
+- [watchmedo] Renamed the ``LogLevelException`` exception to ``LogLevelError`` (`#1057 <https://github.com/gorakhargosh/watchdog/pull/1057>`__)
+- [watchmedo] Renamed the ``WatchdogShutdown`` exception to ``WatchdogShutdownError`` (`#1057 <https://github.com/gorakhargosh/watchdog/pull/1057>`__)
+- [windows] Renamed the ``FILE_NOTIFY_INFORMATION`` class to ``FileNotifyInformation`` (`#1055 <https://github.com/gorakhargosh/watchdog/pull/1055>`__)
+- [windows] Removed the unused ``WATCHDOG_TRAVERSE_MOVED_DIR_DELAY`` constant (`#1057 <https://github.com/gorakhargosh/watchdog/pull/1057>`__)
+
+**Other Changes**
+
+- [core] Enable ``disallow_untyped_calls`` Mypy rule (`#1055 <https://github.com/gorakhargosh/watchdog/pull/1055>`__)
+- [core] Enable ``disallow_untyped_defs`` Mypy rule (`#1060 <https://github.com/gorakhargosh/watchdog/pull/1060>`__)
+- [core] Improve typing references for events (`#1040 <https://github.com/gorakhargosh/watchdog/issues/1040>`__)
+- [inotify] Add support for ``IN_CLOSE_NOWRITE`` events. A ``FileClosedNoWriteEvent`` event will be fired, and its ``on_closed_no_write()`` dispatcher has been introduced (`#1046 <https://github.com/gorakhargosh/watchdog/pull/1046>`__)
+- Thanks to our beloved contributors: @BoboTiG
+
+4.0.2
+~~~~~
+
+2024-08-11 • `full history <https://github.com/gorakhargosh/watchdog/compare/v4.0.1...v4.0.2>`__
+
+- Add support for Python 3.13 (`#1052 <https://github.com/gorakhargosh/watchdog/pull/1052>`__)
+- [core] Run ``ruff``, apply several fixes (`#1033 <https://github.com/gorakhargosh/watchdog/pull/1033>`__)
+- [core] Remove execution rights from ``events.py``
+- [documentation] Update ``PatternMatchingEventHandler`` docstrings (`#1048 <https://github.com/gorakhargosh/watchdog/pull/1048>`__)
+- [documentation] Simplify the quickstart example (`#1047 <https://github.com/gorakhargosh/watchdog/pull/1047>`__)
+- [fsevents] Add missing ``event_filter`` keyword-argument to ``FSEventsObserver.schedule()`` (`#1049 <https://github.com/gorakhargosh/watchdog/pull/1049>`__)
+- [utils] Fix a possible race condition in ``AutoRestartTrick`` (`#1002 <https://github.com/gorakhargosh/watchdog/pull/1002>`__)
+- [watchmedo] Remove execution rights from ``watchmedo.py``
+- Thanks to our beloved contributors: @BoboTiG, @nbelakovski, @ivg
+
+4.0.1
+~~~~~
+
+2024-05-23 • `full history <https://github.com/gorakhargosh/watchdog/compare/v4.0.0...v4.0.1>`__
+
+- [inotify] Fix missing ``event_filter`` for the full emitter (`#1032 <https://github.com/gorakhargosh/watchdog/pull/1032>`__)
+- Thanks to our beloved contributors: @mraspaud, @BoboTiG
+
+4.0.0
+~~~~~
+
+2024-02-06 • `full history <https://github.com/gorakhargosh/watchdog/compare/v3.0.0...v4.0.0>`__
+
+- Drop support for Python 3.7.
+- Add support for Python 3.12.
+- [snapshot] Add typing to ``dirsnapshot`` (`#1012 <https://github.com/gorakhargosh/watchdog/pull/1012>`__)
+- [snapshot] Added ``DirectorySnapshotDiff.ContextManager`` (`#1011 <https://github.com/gorakhargosh/watchdog/pull/1011>`__)
+- [events] ``FileSystemEvent``, and subclasses, are now ``dataclass``es, and their ``repr()`` has changed
+- [windows] ``WinAPINativeEvent`` is now a ``dataclass``, and its ``repr()`` has changed
 - [events] Log ``FileOpenedEvent``, and ``FileClosedEvent``, events in ``LoggingEventHandler``
 - [tests] Improve ``FileSystemEvent`` coverage
 - [watchmedo] Log all events in ``LoggerTrick``
-- Thanks to our beloved contributors: @BoboTiG
-
+- [windows] The ``observers.read_directory_changes.WATCHDOG_TRAVERSE_MOVED_DIR_DELAY`` hack was removed. The constant will be kept to prevent breaking other softwares.
+- Thanks to our beloved contributors: @BoboTiG, @msabramo
 
 3.0.0
 ~~~~~

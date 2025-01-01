@@ -1,12 +1,15 @@
 Watchdog
 ========
 
-|Build Status|
-|CirrusCI Status|
+|PyPI Version|
+|PyPI Status|
+|PyPI Python Versions|
+|GitHub Build Status|
+|GitHub License|
 
 Python API and shell utilities to monitor file system events.
 
-Works on 3.7+.
+Works on 3.9+.
 
 Example API Usage
 -----------------
@@ -16,27 +19,27 @@ as command-line arguments and logs events generated:
 
 .. code-block:: python
 
-    import sys
     import time
-    import logging
-    from watchdog.observers import Observer
-    from watchdog.events import LoggingEventHandler
 
-    if __name__ == "__main__":
-        logging.basicConfig(level=logging.INFO,
-                            format='%(asctime)s - %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
-        path = sys.argv[1] if len(sys.argv) > 1 else '.'
-        event_handler = LoggingEventHandler()
-        observer = Observer()
-        observer.schedule(event_handler, path, recursive=True)
-        observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        finally:
-            observer.stop()
-            observer.join()
+    from watchdog.events import FileSystemEvent, FileSystemEventHandler
+    from watchdog.observers import Observer
+
+
+    class MyEventHandler(FileSystemEventHandler):
+        def on_any_event(self, event: FileSystemEvent) -> None:
+            print(event)
+
+
+    event_handler = MyEventHandler()
+    observer = Observer()
+    observer.schedule(event_handler, ".", recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    finally:
+        observer.stop()
+        observer.join()
 
 
 Shell Utilities
@@ -53,7 +56,7 @@ ignoring all directory events:
 .. code-block:: bash
 
     watchmedo log \
-        --patterns="*.py;*.txt" \
+        --patterns='*.py;*.txt' \
         --ignore-directories \
         --recursive \
         --verbose \
@@ -65,7 +68,7 @@ response to events:
 .. code-block:: bash
 
     watchmedo shell-command \
-        --patterns="*.py;*.txt" \
+        --patterns='*.py;*.txt' \
         --recursive \
         --command='echo "${watch_src_path}"' \
         .
@@ -125,7 +128,7 @@ Install from PyPI using ``pip``:
     $ python -m pip install -U watchdog
 
     # or to install the watchmedo utility:
-    $ python -m pip install -U "watchdog[watchmedo]"
+    $ python -m pip install -U 'watchdog[watchmedo]'
 
 Install from source:
 
@@ -134,7 +137,7 @@ Install from source:
     $ python -m pip install -e .
 
     # or to install the watchmedo utility:
-    $ python -m pip install -e ".[watchmedo]"
+    $ python -m pip install -e '.[watchmedo]'
 
 
 Documentation
@@ -151,9 +154,8 @@ ticket at the `issue tracker`_. For general help and questions use
 
 Create and activate your virtual environment, then::
 
-    python -m pip install pytest pytest-cov
-    python -m pip install -e ".[watchmedo]"
-    python -m pytest tests
+    python -m pip install tox
+    python -m tox [-q] [-e ENV]
 
 If you are making a substantial change, add an entry to the "Unreleased" section
 of the `changelog`_.
@@ -212,7 +214,7 @@ appropriate observer like in the example above, do::
 Dependencies
 ------------
 
-1. Python 3.7 or above.
+1. Python 3.9 or above.
 2. XCode_ (only on macOS when installing from sources)
 3. PyYAML_ (only for ``watchmedo``)
 
@@ -221,9 +223,10 @@ Licensing
 
 Watchdog is licensed under the terms of the `Apache License, version 2.0`_.
 
-Copyright 2011 `Yesudeep Mangalapilly`_.
-
-Copyright 2012 Google, Inc & contributors.
+- Copyright 2018-2025 Mickaël Schoentgen & contributors
+- Copyright 2014-2018 Thomas Amland & contributors
+- Copyright 2012-2014 Google, Inc.
+- Copyright 2011-2012 Yesudeep Mangalapilly
 
 Project `source code`_ is available at Github. Please report bugs and file
 enhancement requests at the `issue tracker`_.
@@ -270,7 +273,13 @@ to do:
 .. _file.monitor: https://github.com/pke/file.monitor
 .. _pyfilesystem: https://github.com/PyFilesystem/pyfilesystem
 
-.. |Build Status| image:: https://github.com/gorakhargosh/watchdog/workflows/Tests/badge.svg
+.. |PyPI Version| image:: https://img.shields.io/pypi/v/watchdog.svg
+   :target: https://pypi.python.org/pypi/watchdog/
+.. |PyPI Status| image:: https://img.shields.io/pypi/status/watchdog.svg
+   :target: https://pypi.python.org/pypi/watchdog/
+.. |PyPI Python Versions| image:: https://img.shields.io/pypi/pyversions/watchdog.svg
+   :target: https://pypi.python.org/pypi/watchdog/
+.. |Github Build Status| image:: https://github.com/gorakhargosh/watchdog/workflows/Tests/badge.svg
    :target: https://github.com/gorakhargosh/watchdog/actions?query=workflow%3ATests
-.. |CirrusCI Status| image:: https://api.cirrus-ci.com/github/gorakhargosh/watchdog.svg
-   :target: https://cirrus-ci.com/github/gorakhargosh/watchdog/
+.. |GitHub License| image:: https://img.shields.io/github/license/gorakhargosh/watchdog.svg
+   :target: https://github.com/gorakhargosh/watchdog/blob/master/LICENSE

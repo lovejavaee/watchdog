@@ -1,18 +1,3 @@
-# Copyright 2011 Yesudeep Mangalapilly <yesudeep@gmail.com>
-# Copyright 2012 Google, Inc & contributors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from __future__ import annotations
 
 from watchdog.events import (
@@ -39,10 +24,7 @@ g_ignore_patterns = ["*.foo"]
 
 
 def assert_patterns(event):
-    if hasattr(event, "dest_path"):
-        paths = [event.src_path, event.dest_path]
-    else:
-        paths = [event.src_path]
+    paths = [event.src_path, event.dest_path] if hasattr(event, "dest_path") else [event.src_path]
     filtered_paths = filter_paths(
         paths,
         included_patterns=["*.py", "*.txt"],
@@ -142,12 +124,8 @@ def test_dispatch():
             assert event.event_type == EVENT_TYPE_CREATED
             assert_patterns(event)
 
-    no_dirs_handler = TestableEventHandler(
-        patterns=patterns, ignore_patterns=ignore_patterns, ignore_directories=True
-    )
-    handler = TestableEventHandler(
-        patterns=patterns, ignore_patterns=ignore_patterns, ignore_directories=False
-    )
+    no_dirs_handler = TestableEventHandler(patterns=patterns, ignore_patterns=ignore_patterns, ignore_directories=True)
+    handler = TestableEventHandler(patterns=patterns, ignore_patterns=ignore_patterns)
 
     for event in all_events:
         no_dirs_handler.dispatch(event)
@@ -156,8 +134,12 @@ def test_dispatch():
 
 
 def test_handler():
-    handler1 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, True)
-    handler2 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, False)
+    handler1 = PatternMatchingEventHandler(
+        patterns=g_allowed_patterns,
+        ignore_patterns=g_ignore_patterns,
+        ignore_directories=True,
+    )
+    handler2 = PatternMatchingEventHandler(patterns=g_allowed_patterns, ignore_patterns=g_ignore_patterns)
     assert handler1.patterns == g_allowed_patterns
     assert handler1.ignore_patterns == g_ignore_patterns
     assert handler1.ignore_directories
@@ -165,17 +147,29 @@ def test_handler():
 
 
 def test_ignore_directories():
-    handler1 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, True)
-    handler2 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, False)
+    handler1 = PatternMatchingEventHandler(
+        patterns=g_allowed_patterns,
+        ignore_patterns=g_ignore_patterns,
+        ignore_directories=True,
+    )
+    handler2 = PatternMatchingEventHandler(patterns=g_allowed_patterns, ignore_patterns=g_ignore_patterns)
     assert handler1.ignore_directories
     assert not handler2.ignore_directories
 
 
 def test_ignore_patterns():
-    handler1 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, True)
+    handler1 = PatternMatchingEventHandler(
+        patterns=g_allowed_patterns,
+        ignore_patterns=g_ignore_patterns,
+        ignore_directories=True,
+    )
     assert handler1.ignore_patterns == g_ignore_patterns
 
 
 def test_patterns():
-    handler1 = PatternMatchingEventHandler(g_allowed_patterns, g_ignore_patterns, True)
+    handler1 = PatternMatchingEventHandler(
+        patterns=g_allowed_patterns,
+        ignore_patterns=g_ignore_patterns,
+        ignore_directories=True,
+    )
     assert handler1.patterns == g_allowed_patterns

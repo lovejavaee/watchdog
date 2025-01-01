@@ -1,17 +1,3 @@
-# Copyright 2014 Thomas Amland <thomas.amland@gmail.com>
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from __future__ import annotations
 
 import errno
@@ -53,6 +39,20 @@ def test_move_to(p):
     mv(p("dir1", "a"), p("dir2", "b"))
     diff = DirectorySnapshotDiff(ref, DirectorySnapshot(p("dir2")))
     assert diff.files_created == [p("dir2", "b")]
+
+
+def test_move_to_with_context_manager(p):
+    mkdir(p("dir1"))
+    touch(p("dir1", "a"))
+    mkdir(p("dir2"))
+
+    dir1_cm = DirectorySnapshotDiff.ContextManager(p("dir1"))
+    dir2_cm = DirectorySnapshotDiff.ContextManager(p("dir2"))
+    with dir1_cm, dir2_cm:
+        mv(p("dir1", "a"), p("dir2", "b"))
+
+    assert dir1_cm.diff.files_deleted == [p("dir1", "a")]
+    assert dir2_cm.diff.files_created == [p("dir2", "b")]
 
 
 def test_move_from(p):

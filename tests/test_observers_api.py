@@ -1,18 +1,3 @@
-# Copyright 2011 Yesudeep Mangalapilly <yesudeep@gmail.com>
-# Copyright 2012 Google, Inc & contributors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from __future__ import annotations
 
 import time
@@ -20,19 +5,19 @@ from pathlib import Path
 
 import pytest
 
-from watchdog.events import FileModifiedEvent, LoggingEventHandler
+from watchdog.events import FileModifiedEvent, FileOpenedEvent, LoggingEventHandler
 from watchdog.observers.api import BaseObserver, EventDispatcher, EventEmitter, EventQueue, ObservedWatch
 
 
 def test_observer_constructor():
-    ObservedWatch(Path("/foobar"), True)
+    ObservedWatch(Path("/foobar"), recursive=True)
 
 
 def test_observer__eq__():
-    watch1 = ObservedWatch("/foobar", True)
-    watch2 = ObservedWatch("/foobar", True)
-    watch_ne1 = ObservedWatch("/foo", True)
-    watch_ne2 = ObservedWatch("/foobar", False)
+    watch1 = ObservedWatch("/foobar", recursive=True)
+    watch2 = ObservedWatch("/foobar", recursive=True)
+    watch_ne1 = ObservedWatch("/foo", recursive=True)
+    watch_ne2 = ObservedWatch("/foobar", recursive=False)
 
     assert watch1 == watch2
     assert watch1.__eq__(watch2)
@@ -41,10 +26,10 @@ def test_observer__eq__():
 
 
 def test_observer__ne__():
-    watch1 = ObservedWatch("/foobar", True)
-    watch2 = ObservedWatch("/foobar", True)
-    watch_ne1 = ObservedWatch("/foo", True)
-    watch_ne2 = ObservedWatch("/foobar", False)
+    watch1 = ObservedWatch("/foobar", recursive=True)
+    watch2 = ObservedWatch("/foobar", recursive=True)
+    watch_ne1 = ObservedWatch("/foo", recursive=True)
+    watch_ne2 = ObservedWatch("/foobar", recursive=False)
 
     assert not watch1.__ne__(watch2)
     assert watch1.__ne__(watch_ne1)
@@ -52,22 +37,27 @@ def test_observer__ne__():
 
 
 def test_observer__repr__():
-    observed_watch = ObservedWatch("/foobar", True)
+    observed_watch = ObservedWatch("/foobar", recursive=True)
     repr_str = "<ObservedWatch: path='/foobar', is_recursive=True>"
+    assert observed_watch.__repr__() == repr(observed_watch)
+    assert repr(observed_watch) == repr_str
+
+    observed_watch = ObservedWatch("/foobar", recursive=False, event_filter=[FileOpenedEvent, FileModifiedEvent])
+    repr_str = "<ObservedWatch: path='/foobar', is_recursive=False, event_filter=FileModifiedEvent|FileOpenedEvent>"
     assert observed_watch.__repr__() == repr(observed_watch)
     assert repr(observed_watch) == repr_str
 
 
 def test_event_emitter():
     event_queue = EventQueue()
-    watch = ObservedWatch("/foobar", True)
+    watch = ObservedWatch("/foobar", recursive=True)
     event_emitter = EventEmitter(event_queue, watch, timeout=1)
     event_emitter.queue_event(FileModifiedEvent("/foobar/blah"))
 
 
 def test_event_dispatcher():
     event = FileModifiedEvent("/foobar")
-    watch = ObservedWatch("/path", True)
+    watch = ObservedWatch("/path", recursive=True)
 
     class TestableEventDispatcher(EventDispatcher):
         def dispatch_event(self, event, watch):
@@ -85,7 +75,7 @@ def test_observer_basic():
     observer = BaseObserver(EventEmitter)
     handler = LoggingEventHandler()
 
-    watch = observer.schedule(handler, "/foobar", True)
+    watch = observer.schedule(handler, "/foobar", recursive=True)
     observer.add_handler_for_watch(handler, watch)
     observer.add_handler_for_watch(handler, watch)
     observer.remove_handler_for_watch(handler, watch)
@@ -95,7 +85,7 @@ def test_observer_basic():
     with pytest.raises(KeyError):
         observer.unschedule(watch)
 
-    watch = observer.schedule(handler, "/foobar", True)
+    watch = observer.schedule(handler, "/foobar", recursive=True)
     observer.event_queue.put((FileModifiedEvent("/foobar"), watch))
     observer.start()
     time.sleep(1)

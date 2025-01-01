@@ -11,7 +11,7 @@ Watchdog
 
 Python API library and shell utilities to monitor file system events.
 
-Works on 3.7+.
+Works on 3.9+.
 
 Directory monitoring made easy with
 -----------------------------------

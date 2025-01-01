@@ -11,7 +11,7 @@ import pytest
 from .utils import ExpectEvent, Helper, P, StartWatching, TestEventQueue
 
 
-@pytest.fixture()
+@pytest.fixture
 def p(tmpdir, *args):
     """
     Convenience function to join the temporary directory path
@@ -21,7 +21,7 @@ def p(tmpdir, *args):
 
 
 @pytest.fixture(autouse=True)
-def no_thread_leaks():
+def _no_thread_leaks():
     """
     Fail on thread leak.
     We do not use pytest-threadleak because it is not reliable.
@@ -29,13 +29,11 @@ def no_thread_leaks():
     old_thread_count = threading.active_count()
     yield
     gc.collect()  # Clear the stuff from other function-level fixtures
-    assert (
-        threading.active_count() == old_thread_count
-    )  # Only previously existing threads
+    assert threading.active_count() == old_thread_count  # Only previously existing threads
 
 
 @pytest.fixture(autouse=True)
-def no_warnings(recwarn):
+def _no_warnings(recwarn):
     """Fail on warning."""
 
     yield
@@ -48,12 +46,12 @@ def no_warnings(recwarn):
             "Not importing directory" in message
             or "Using or importing the ABCs" in message
             or "dns.hash module will be removed in future versions" in message
+            or "is still running" in message
             or "eventlet" in filename
         ):
             continue
-        warnings.append("{w.filename}:{w.lineno} {w.message}".format(w=warning))
-    print(warnings)
-    assert not warnings
+        warnings.append(f"{warning.filename}:{warning.lineno} {warning.message}")
+    assert not warnings, warnings
 
 
 @pytest.fixture(name="helper")

@@ -1,24 +1,8 @@
-# Copyright 2011 Yesudeep Mangalapilly <yesudeep@gmail.com>
-# Copyright 2012 Google, Inc & contributors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from __future__ import annotations
-
-import pytest
 
 from watchdog.events import (
     EVENT_TYPE_CLOSED,
+    EVENT_TYPE_CLOSED_NO_WRITE,
     EVENT_TYPE_CREATED,
     EVENT_TYPE_DELETED,
     EVENT_TYPE_MODIFIED,
@@ -29,12 +13,12 @@ from watchdog.events import (
     DirModifiedEvent,
     DirMovedEvent,
     FileClosedEvent,
+    FileClosedNoWriteEvent,
     FileCreatedEvent,
     FileDeletedEvent,
     FileModifiedEvent,
     FileMovedEvent,
     FileOpenedEvent,
-    FileSystemEvent,
     FileSystemEventHandler,
 )
 
@@ -45,7 +29,7 @@ path_2 = "/path/abc"
 def test_file_deleted_event():
     event = FileDeletedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_DELETED == event.event_type
+    assert event.event_type == EVENT_TYPE_DELETED
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -60,7 +44,7 @@ def test_file_delete_event_is_directory():
 def test_file_modified_event():
     event = FileModifiedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_MODIFIED == event.event_type
+    assert event.event_type == EVENT_TYPE_MODIFIED
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -75,7 +59,7 @@ def test_file_modified_event_is_directory():
 def test_file_created_event():
     event = FileCreatedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_CREATED == event.event_type
+    assert event.event_type == EVENT_TYPE_CREATED
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -84,7 +68,7 @@ def test_file_moved_event():
     event = FileMovedEvent(path_1, path_2)
     assert path_1 == event.src_path
     assert path_2 == event.dest_path
-    assert EVENT_TYPE_MOVED == event.event_type
+    assert event.event_type == EVENT_TYPE_MOVED
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -92,7 +76,15 @@ def test_file_moved_event():
 def test_file_closed_event():
     event = FileClosedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_CLOSED == event.event_type
+    assert event.event_type == EVENT_TYPE_CLOSED
+    assert not event.is_directory
+    assert not event.is_synthetic
+
+
+def test_file_closed_no_write_event():
+    event = FileClosedNoWriteEvent(path_1)
+    assert path_1 == event.src_path
+    assert event.event_type == EVENT_TYPE_CLOSED_NO_WRITE
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -100,7 +92,7 @@ def test_file_closed_event():
 def test_file_opened_event():
     event = FileOpenedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_OPENED == event.event_type
+    assert event.event_type == EVENT_TYPE_OPENED
     assert not event.is_directory
     assert not event.is_synthetic
 
@@ -108,7 +100,7 @@ def test_file_opened_event():
 def test_dir_deleted_event():
     event = DirDeletedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_DELETED == event.event_type
+    assert event.event_type == EVENT_TYPE_DELETED
     assert event.is_directory
     assert not event.is_synthetic
 
@@ -116,7 +108,7 @@ def test_dir_deleted_event():
 def test_dir_modified_event():
     event = DirModifiedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_MODIFIED == event.event_type
+    assert event.event_type == EVENT_TYPE_MODIFIED
     assert event.is_directory
     assert not event.is_synthetic
 
@@ -124,7 +116,7 @@ def test_dir_modified_event():
 def test_dir_created_event():
     event = DirCreatedEvent(path_1)
     assert path_1 == event.src_path
-    assert EVENT_TYPE_CREATED == event.event_type
+    assert event.event_type == EVENT_TYPE_CREATED
     assert event.is_directory
     assert not event.is_synthetic
 
@@ -135,6 +127,7 @@ def test_file_system_event_handler_dispatch():
     dir_cre_event = DirCreatedEvent("/path/blah.py")
     file_cre_event = FileCreatedEvent("/path/blah.txt")
     file_cls_event = FileClosedEvent("/path/blah.txt")
+    file_cls_nw_event = FileClosedNoWriteEvent("/path/blah.txt")
     file_opened_event = FileOpenedEvent("/path/blah.txt")
     dir_mod_event = DirModifiedEvent("/path/blah.py")
     file_mod_event = FileModifiedEvent("/path/blah.txt")
@@ -151,29 +144,50 @@ def test_file_system_event_handler_dispatch():
         file_cre_event,
         file_mov_event,
         file_cls_event,
+        file_cls_nw_event,
         file_opened_event,
     ]
 
+    checkpoint = 0
+
     class TestableEventHandler(FileSystemEventHandler):
         def on_any_event(self, event):
-            pass
+            nonlocal checkpoint
+            checkpoint += 1
 
         def on_modified(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_MODIFIED
 
         def on_deleted(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_DELETED
 
         def on_moved(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_MOVED
 
         def on_created(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_CREATED
 
         def on_closed(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_CLOSED
 
+        def on_closed_no_write(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
+            assert event.event_type == EVENT_TYPE_CLOSED_NO_WRITE
+
         def on_opened(self, event):
+            nonlocal checkpoint
+            checkpoint += 1
             assert event.event_type == EVENT_TYPE_OPENED
 
     handler = TestableEventHandler()
@@ -182,57 +196,7 @@ def test_file_system_event_handler_dispatch():
         assert not event.is_synthetic
         handler.dispatch(event)
 
-
-@pytest.mark.parametrize(
-    "event, prez",
-    [
-        # Files
-        (
-            FileDeletedEvent("a"),
-            "<FileDeletedEvent: event_type=deleted, src_path='a', is_directory=False>",
-        ),
-        (
-            FileModifiedEvent("a"),
-            "<FileModifiedEvent: event_type=modified, src_path='a', is_directory=False>",
-        ),
-        (
-            FileCreatedEvent("a"),
-            "<FileCreatedEvent: event_type=created, src_path='a', is_directory=False>",
-        ),
-        (
-            FileMovedEvent("a", "b"),
-            "<FileMovedEvent: src_path='a', dest_path='b', is_directory=False>",
-        ),
-        (
-            FileClosedEvent("a"),
-            "<FileClosedEvent: event_type=closed, src_path='a', is_directory=False>",
-        ),
-        (
-            FileOpenedEvent("a"),
-            "<FileOpenedEvent: event_type=opened, src_path='a', is_directory=False>",
-        ),
-        # Folders
-        (
-            DirDeletedEvent("a"),
-            "<DirDeletedEvent: event_type=deleted, src_path='a', is_directory=True>",
-        ),
-        (
-            DirModifiedEvent("a"),
-            "<DirModifiedEvent: event_type=modified, src_path='a', is_directory=True>",
-        ),
-        (
-            DirCreatedEvent("a"),
-            "<DirCreatedEvent: event_type=created, src_path='a', is_directory=True>",
-        ),
-        (
-            DirMovedEvent("a", "b"),
-            "<DirMovedEvent: src_path='a', dest_path='b', is_directory=True>",
-        ),
-    ],
-)
-def test_event_repr_and_str(event: FileSystemEvent, prez: str) -> None:
-    assert repr(event) == prez
-    assert str(event) == prez
+    assert checkpoint == len(all_events) * 2  # `on_any_event()` + specific `on_XXX()`
 
 
 def test_event_comparison():
@@ -247,7 +211,7 @@ def test_event_comparison():
     move2 = FileMovedEvent("a", "b")
     move3 = FileMovedEvent("a", "c")
     move4 = FileMovedEvent("b", "a")
-    assert creation1 != move1
+    assert creation1 != move1  # type: ignore[comparison-overlap]
     assert move1 == move2
     assert move1 != move3
     assert move1 != move4

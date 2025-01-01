@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import contextlib
+
 import pytest
 
 from watchdog.utils import platform
 
-if not platform.is_darwin():  # noqa
+if not platform.is_darwin():
     pytest.skip("macOS only.", allow_module_level=True)
 
 import logging
@@ -14,9 +16,10 @@ from os import mkdir, rmdir
 from random import random
 from threading import Thread
 from time import sleep
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-import _watchdog_fsevents as _fsevents  # type: ignore[import]
+import _watchdog_fsevents as _fsevents  # type: ignore[import-not-found]
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -24,7 +27,9 @@ from watchdog.observers.api import BaseObserver, ObservedWatch
 from watchdog.observers.fsevents import FSEventsEmitter
 
 from .shell import touch
-from .utils import P, StartWatching, TestEventQueue
+
+if TYPE_CHECKING:
+    from .utils import P, StartWatching, TestEventQueue
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,14 +41,12 @@ def observer():
     obs.start()
     yield obs
     obs.stop()
-    try:
+    with contextlib.suppress(RuntimeError):
         obs.join()
-    except RuntimeError:
-        pass
 
 
 @pytest.mark.parametrize(
-    "event,expectation",
+    ("event", "expectation"),
     [
         # invalid flags
         (_fsevents.NativeEvent("", 0, 0, 0), False),
@@ -55,16 +58,12 @@ def observer():
         (_fsevents.NativeEvent("", 0, 0x00000800 | 0x00000200 | 0x00000100, 0), True),
         # renamed, removed, created, itemfindermod
         (
-            _fsevents.NativeEvent(
-                "", 0, 0x00000800 | 0x00000200 | 0x00000100 | 0x00002000, 0
-            ),
+            _fsevents.NativeEvent("", 0, 0x00000800 | 0x00000200 | 0x00000100 | 0x00002000, 0),
             True,
         ),
         # xattr, removed, modified, itemfindermod
         (
-            _fsevents.NativeEvent(
-                "", 0, 0x00008000 | 0x00000200 | 0x00001000 | 0x00002000, 0
-            ),
+            _fsevents.NativeEvent("", 0, 0x00008000 | 0x00000200 | 0x00001000 | 0x00002000, 0),
             False,
         ),
     ],
@@ -119,13 +118,11 @@ def test_watcher_deletion_while_receiving_events_1(
         FSEventsEmitter.stop(emitter)
         orig(*args)
 
-    with caplog.at_level(logging.ERROR), patch.object(
-        FSEventsEmitter, "events_callback", new=cb
-    ):
-        emitter = start_watching(tmpdir)
+    with caplog.at_level(logging.ERROR), patch.object(FSEventsEmitter, "events_callback", new=cb):
+        emitter = start_watching(path=tmpdir)
         # Less than 100 is not enough events to trigger the error
         for n in range(100):
-            touch(p("{}.txt".format(n)))
+            touch(p(f"{n}.txt"))
         emitter.stop()
         assert not caplog.records
 
@@ -154,7 +151,7 @@ def test_watcher_deletion_while_receiving_events_2(
 
     def try_to_fail():
         tmpdir = p()
-        emitter = start_watching(tmpdir)
+        emitter = start_watching(path=tmpdir)
 
         def create_files():
             # Less than 2000 is not enough events to trigger the error
@@ -235,7 +232,7 @@ def test_converting_cfstring_to_pyunicode(p: P, start_watching: StartWatching, e
     """See https://github.com/gorakhargosh/watchdog/issues/762"""
 
     tmpdir = p()
-    emitter = start_watching(tmpdir)
+    emitter = start_watching(path=tmpdir)
 
     dirname = "TéstClass"
 
@@ -276,9 +273,7 @@ def test_recursive_check_accepts_relative_paths(p: P) -> None:
 
     cwd = os.getcwd()
     os.chdir(p())
-    event_handler = TestEventHandler(
-        patterns=["*.json"], ignore_patterns=[], ignore_directories=True
-    )
+    event_handler = TestEventHandler(patterns=["*.json"], ignore_patterns=[], ignore_directories=True)
     observer = Observer()
     observer.schedule(event_handler, ".")
     observer.start()
@@ -329,9 +324,7 @@ def test_watchdog_recursive(p: P) -> None:
         while not expected.issubset(handler.changes) and time.time() < timeout_at:
             time.sleep(0.2)
 
-        assert expected.issubset(
-            handler.changes
-        ), f"Did not find expected changes. Found: {handler.changes}"
+        assert expected.issubset(handler.changes), f"Did not find expected changes. Found: {handler.changes}"
     finally:
         for watch in watches:
             observer.unschedule(watch)
